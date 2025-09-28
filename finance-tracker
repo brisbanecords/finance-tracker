@@ -1,0 +1,287 @@
+import React, { useState } from 'react';
+import { 
+  LineChart, BarChart, PieChart, Line, Bar, Pie, XAxis, YAxis, 
+  CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell 
+} from 'recharts';
+
+const PersonalFinanceTracker = () => {
+  // Mock financial data
+  const [transactions, setTransactions] = useState([
+    { id: 1, date: '2024-01-15', amount: -150, category: 'Groceries', type: 'expense', description: 'Supermarket shopping' },
+    { id: 2, date: '2024-01-16', amount: 3000, category: 'Salary', type: 'income', description: 'Monthly salary' },
+    { id: 3, date: '2024-01-17', amount: -75, category: 'Utilities', type: 'expense', description: 'Electricity bill' },
+    { id: 4, date: '2024-01-18', amount: -45, category: 'Entertainment', type: 'expense', description: 'Movie tickets' },
+    { id: 5, date: '2024-01-19', amount: -200, category: 'Transportation', type: 'expense', description: 'Gas refill' },
+    { id: 6, date: '2024-01-20', amount: 500, category: 'Freelance', type: 'income', description: 'Project payment' }
+  ]);
+
+  const [budgets, setBudgets] = useState([
+    { category: 'Groceries', allocated: 500, spent: 150 },
+    { category: 'Utilities', allocated: 300, spent: 75 },
+    { category: 'Entertainment', allocated: 200, spent: 45 },
+    { category: 'Transportation', allocated: 400, spent: 200 },
+    { category: 'Dining', allocated: 300, spent: 0 }
+  ]);
+
+  const [dashboardLayout, setDashboardLayout] = useState({
+    showBudget: true,
+    showSpending: true,
+    showIncome: true,
+    showNetWorth: true,
+    showReports: true
+  });
+
+  // Calculate totals
+  const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+  const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const netWorth = totalIncome - totalExpenses;
+
+  // Spending by category for charts
+  const spendingByCategory = budgets.map(budget => ({
+    name: budget.category,
+    value: budget.spent,
+    allocated: budget.allocated
+  }));
+
+  const monthlyData = [
+    { month: 'Jan', income: 3500, expenses: 470 },
+    { month: 'Feb', income: 3200, expenses: 520 },
+    { month: 'Mar', income: 3800, expenses: 600 },
+    { month: 'Apr', income: 4000, expenses: 550 }
+  ];
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+
+  const handleAddTransaction = (transaction: any) => {
+    setTransactions([...transactions, { ...transaction, id: Date.now() }]);
+  };
+
+  const handleSyncBanks = () => {
+    // Simulate bank sync
+    const newTransactions = [
+      ...transactions,
+      { id: Date.now(), date: '2024-01-21', amount: -89.99, category: 'Shopping', type: 'expense', description: 'Online purchase' },
+      { id: Date.now() + 1, date: '2024-01-21', amount: 250, category: 'Bonus', type: 'income', description: 'Performance bonus' }
+    ];
+    setTransactions(newTransactions);
+  };
+
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Personal Finance Tracker</h1>
+            <p className="text-muted-foreground">Track your money, reach your goals</p>
+          </div>
+          <div className="flex gap-4">
+            <button 
+              onClick={handleSyncBanks}
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
+            >
+              Sync Banks
+            </button>
+            <button className="bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/90">
+              Generate Report
+            </button>
+          </div>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
+            <h3 className="text-muted-foreground text-sm font-medium">Total Income</h3>
+            <p className="text-2xl font-bold text-foreground">${totalIncome.toLocaleString()}</p>
+          </div>
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
+            <h3 className="text-muted-foreground text-sm font-medium">Total Expenses</h3>
+            <p className="text-2xl font-bold text-destructive">${totalExpenses.toLocaleString()}</p>
+          </div>
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
+            <h3 className="text-muted-foreground text-sm font-medium">Net Worth</h3>
+            <p className="text-2xl font-bold text-foreground">${netWorth.toLocaleString()}</p>
+          </div>
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
+            <h3 className="text-muted-foreground text-sm font-medium">Budget Utilization</h3>
+            <p className="text-2xl font-bold text-foreground">
+              {((totalExpenses / budgets.reduce((sum, b) => sum + b.allocated, 0)) * 100).toFixed(1)}%
+            </p>
+          </div>
+        </div>
+
+        {/* Dashboard Customization */}
+        <div className="bg-card rounded-lg p-6 mb-8 shadow-sm border">
+          <h2 className="text-xl font-semibold text-foreground mb-4">Dashboard Customization</h2>
+          <div className="flex flex-wrap gap-4">
+            {Object.entries(dashboardLayout).map(([key, value]) => (
+              <label key={key} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={value}
+                  onChange={(e) => setDashboardLayout(prev => ({
+                    ...prev,
+                    [key]: e.target.checked
+                  }))}
+                  className="rounded border-border"
+                />
+                <span className="text-foreground capitalize">{key.replace('show', '').replace(/([A-Z])/g, ' $1').trim()}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Dashboard Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Budget Planning */}
+          {dashboardLayout.showBudget && (
+            <div className="bg-card rounded-lg p-6 shadow-sm border">
+              <h2 className="text-xl font-semibold text-foreground mb-4">Budget Planning</h2>
+              <div className="space-y-4">
+                {budgets.map((budget, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-foreground">{budget.category}</span>
+                      <span className="text-muted-foreground">
+                        ${budget.spent} / ${budget.allocated}
+                      </span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${Math.min(100, (budget.spent / budget.allocated) * 100)}%`
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Spending Analysis */}
+          {dashboardLayout.showSpending && (
+            <div className="bg-card rounded-lg p-6 shadow-sm border">
+              <h2 className="text-xl font-semibold text-foreground mb-4">Spending by Category</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={spendingByCategory}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label
+                  >
+                    {spendingByCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Income vs Expenses Trend */}
+          {dashboardLayout.showIncome && (
+            <div className="bg-card rounded-lg p-6 shadow-sm border">
+              <h2 className="text-xl font-semibold text-foreground mb-4">Income vs Expenses Trend</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="income" stroke="#00C49F" strokeWidth={2} />
+                  <Line type="monotone" dataKey="expenses" stroke="#FF8042" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Recent Transactions */}
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
+            <h2 className="text-xl font-semibold text-foreground mb-4">Recent Transactions</h2>
+            <div className="space-y-3">
+              {transactions.slice(-5).map((transaction) => (
+                <div key={transaction.id} className="flex justify-between items-center p-3 bg-muted/50 rounded">
+                  <div>
+                    <p className="font-medium text-foreground">{transaction.description}</p>
+                    <p className="text-sm text-muted-foreground">{transaction.category} • {transaction.date}</p>
+                  </div>
+                  <span className={`font-semibold ${transaction.type === 'income' ? 'text-green-600' : 'text-destructive'}`}>
+                    {transaction.type === 'income' ? '+' : '-'}${Math.abs(transaction.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Reports */}
+          {dashboardLayout.showReports && (
+            <div className="bg-card rounded-lg p-6 shadow-sm border">
+              <h2 className="text-xl font-semibold text-foreground mb-4">Financial Reports</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="income" fill="#00C49F" name="Income" />
+                  <Bar dataKey="expenses" fill="#FF8042" name="Expenses" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Add Transaction Form */}
+          <div className="bg-card rounded-lg p-6 shadow-sm border">
+            <h2 className="text-xl font-semibold text-foreground mb-4">Add Transaction</h2>
+            <form className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+                <input type="text" className="w-full p-2 border border-border rounded-md bg-background" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Amount</label>
+                <input type="number" className="w-full p-2 border border-border rounded-md bg-background" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Type</label>
+                <select className="w-full p-2 border border-border rounded-md bg-background">
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Category</label>
+                <select className="w-full p-2 border border-border rounded-md bg-background">
+                  <option value="Groceries">Groceries</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Transportation">Transportation</option>
+                  <option value="Dining">Dining</option>
+                  <option value="Salary">Salary</option>
+                  <option value="Freelance">Freelance</option>
+                </select>
+              </div>
+              <button
+                type="button"
+                className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90"
+              >
+                Add Transaction
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PersonalFinanceTracker;
